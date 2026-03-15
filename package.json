@@ -1,0 +1,18 @@
+{
+  "name": "geosnap",
+  "version": "1.0.0",
+  "description": "AI-powered geo-location from photos — 100% free with Ollama",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.3.1",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.34.5"
+  }
+}

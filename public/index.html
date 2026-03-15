@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoSnap — AI Geolocation</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <h1 class="logo-text">GeoSnap</h1>
+    </div>
+    <div class="header-right">
+      <div class="header-stats" id="headerStats" style="display:none">
+        <div class="stat">
+          <span class="stat-label">Confidence</span>
+          <span class="stat-value" id="headerConfidence">—</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Location</span>
+          <span class="stat-value" id="headerLocation">—</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Upload Zone -->
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" hidden>
+        <div class="upload-content" id="uploadContent">
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="upload-text">Drop a photo here</p>
+          <p class="upload-subtext">or click to browse</p>
+          <p class="upload-hint">JPG, PNG, WebP up to 10MB</p>
+        </div>
+        <div class="preview-container" id="previewContainer" style="display:none">
+          <img id="previewImage" alt="Preview">
+          <button class="btn-clear" id="clearBtn" title="Remove image">&times;</button>
+        </div>
+      </div>
+
+      <!-- Analyze Button -->
+      <button class="btn-analyze" id="analyzeBtn" disabled>
+        <span class="btn-text">Analyze Location</span>
+        <div class="btn-loader" id="btnLoader">
+          <div class="spinner"></div>
+          <span>Analyzing...</span>
+        </div>
+      </button>
+
+      <!-- Results -->
+      <div class="results" id="results" style="display:none">
+
+        <div class="result-header">
+          <h2 id="resultName">—</h2>
+          <p class="result-country" id="resultCountry">—</p>
+        </div>
+
+        <div class="confidence-section">
+          <div class="confidence-header">
+            <span>Confidence</span>
+            <span class="confidence-value" id="confidenceValue">0%</span>
+          </div>
+          <div class="confidence-bar">
+            <div class="confidence-fill" id="confidenceFill"></div>
+          </div>
+        </div>
+
+        <div class="coords-section">
+          <div class="coord-row">
+            <span class="coord-label">Latitude</span>
+            <span class="coord-value" id="latValue">—</span>
+          </div>
+          <div class="coord-row">
+            <span class="coord-label">Longitude</span>
+            <span class="coord-value" id="lngValue">—</span>
+          </div>
+          <div class="coord-actions">
+            <button class="btn-copy" id="copyCoords" title="Copy coordinates">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+              </svg>
+              <span>Copy</span>
+            </button>
+            <button class="btn-streetview-sidebar" id="streetviewBtn" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <span>Street View</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Clues -->
+        <div class="clues-section">
+          <button class="clues-toggle" id="cluesToggle">
+            <span>AI Analysis</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="clues-body" id="cluesBody">
+            <p class="reasoning" id="reasoning"></p>
+            <div class="clues-list" id="cluesList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div class="skeleton" id="skeleton" style="display:none">
+        <div class="skeleton-line wide"></div>
+        <div class="skeleton-line medium"></div>
+        <div class="skeleton-line narrow"></div>
+        <div class="skeleton-bar"></div>
+        <div class="skeleton-line wide"></div>
+        <div class="skeleton-line medium"></div>
+      </div>
+
+    </aside>
+
+    <!-- Map -->
+    <div class="map-wrapper">
+      <div class="map-area" id="mapArea">
+        <div id="map"></div>
+        <div class="map-overlay" id="mapOverlay">
+          <div class="map-overlay-content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+              <circle cx="12" cy="10" r="3"/>
+              <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            <p>Upload a photo to discover its location</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
